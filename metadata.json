@@ -1,0 +1,6 @@
+{
+  "name": "Shammah Movers and Cleaners",
+  "description": "Progressive Web App for Shammah Movers and Cleaners featuring an integrated price calculator based on square footage and distance, package tiers, and service booking.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

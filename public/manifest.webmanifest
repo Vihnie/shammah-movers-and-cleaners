@@ -1,0 +1,49 @@
+{
+  "name": "Shammah Movers and Cleaners",
+  "short_name": "Shammah M&C",
+  "description": "Professional moving and deep cleaning services with instant price calculator and booking.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1E3A8A",
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "business", "utilities"],
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Price Calculator",
+      "url": "/#calculator",
+      "description": "Calculate moving and cleaning cost estimate"
+    },
+    {
+      "name": "Book Service",
+      "url": "/#book",
+      "description": "Book a moving or cleaning team"
+    },
+    {
+      "name": "Track Booking",
+      "url": "/#track",
+      "description": "Look up booking status"
+    }
+  ]
+}

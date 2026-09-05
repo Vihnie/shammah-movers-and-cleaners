@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <rect width="192" height="192" rx="36" fill="#1E3A8A" />
+  <circle cx="96" cy="96" r="84" fill="#FFFFFF" />
+  <g transform="translate(4, 18) scale(0.37)">
+    <defs>
+      <linearGradient id="purpleArcIcon192" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#C084FC" />
+        <stop offset="50%" stop-color="#8B5CF6" />
+        <stop offset="100%" stop-color="#6D28D9" />
+      </linearGradient>
+    </defs>
+    <path d="M 100 160 A 160 160 0 0 1 400 160" fill="none" stroke="url(#purpleArcIcon192)" stroke-width="14" stroke-linecap="round" />
+    
+    <g fill="#1E3A8A">
+      <path d="M 220 75 H 350 V 175 H 220 Z" />
+      <path d="M 353 95 H 395 C 405 95 410 102 412 115 L 420 145 H 425 V 175 H 353 Z" />
+      <circle cx="280" cy="180" r="18" fill="#1E3A8A" />
+      <circle cx="390" cy="180" r="18" fill="#1E3A8A" />
+      <polygon points="155,190 225,160 225,166 160,192" />
+      <circle cx="125" cy="120" r="8" />
+      <path d="M 122 130 L 132 145 L 140 165 L 134 190 H 126 L 128 170 L 118 155 L 112 190 H 104 L 115 142 Z" />
+      <polygon points="135,130 185,115 195,145 145,160" fill="#2563EB" />
+      <circle cx="190" cy="108" r="8" />
+      <path d="M 188 118 L 198 132 L 205 155 L 215 180 H 207 L 198 160 L 190 145 L 180 180 H 172 L 182 130 Z" />
+    </g>
+
+    <text x="250" y="275" text-anchor="middle" font-family="system-ui, sans-serif" font-size="64" font-weight="900" font-style="italic" fill="#1E3A8A">SHAMMAH</text>
+    <polygon points="80,290 420,290 415,320 85,320" fill="#1E3A8A" />
+    <text x="250" y="311" text-anchor="middle" font-family="system-ui, sans-serif" font-size="18" font-weight="800" letter-spacing="4" fill="#FFFFFF">MOVERS AND CLEANERS</text>
+    <path d="M 120 330 A 150 150 0 0 0 380 330" fill="none" stroke="#1E3A8A" stroke-width="8" stroke-linecap="round" />
+  </g>
+</svg>

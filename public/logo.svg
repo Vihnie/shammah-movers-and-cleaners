@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 420" width="100%" height="100%">
+  <defs>
+    <linearGradient id="purpleArc" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C084FC" />
+      <stop offset="50%" stop-color="#8B5CF6" />
+      <stop offset="100%" stop-color="#6D28D9" />
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="100%" stop-color="#1E40AF" />
+    </linearGradient>
+  </defs>
+
+  <!-- Top Arches (Purple Gradient) -->
+  <path d="M 100 160 A 160 160 0 0 1 400 160" fill="none" stroke="url(#purpleArc)" stroke-width="12" stroke-linecap="round" />
+  <path d="M 125 140 A 140 140 0 0 1 375 140" fill="none" stroke="#DDD6FE" stroke-width="4" stroke-linecap="round" />
+
+  <!-- Speed streaks on left -->
+  <line x1="60" y1="130" x2="110" y2="130" stroke="url(#purpleArc)" stroke-width="5" stroke-linecap="round" />
+  <line x1="45" y1="145" x2="95" y2="145" stroke="url(#purpleArc)" stroke-width="5" stroke-linecap="round" />
+  <line x1="55" y1="160" x2="100" y2="160" stroke="url(#purpleArc)" stroke-width="5" stroke-linecap="round" />
+
+  <!-- Movers and Truck Graphic in Center -->
+  <g fill="#1E3A8A">
+    <!-- Moving Truck -->
+    <path d="M 220 75 H 350 V 175 H 220 Z" />
+    <circle cx="270" cy="120" r="4" fill="#FFFFFF" />
+    <!-- Truck decorative emblem -->
+    <polygon points="300,140 305,145 300,150 295,145" fill="#FFFFFF" opacity="0.8" />
+    <!-- Truck Cabin -->
+    <path d="M 353 95 H 395 C 405 95 410 102 412 115 L 420 145 H 425 V 175 H 353 Z" />
+    <!-- Cabin Window -->
+    <path d="M 365 103 H 392 L 398 135 H 365 Z" fill="#FFFFFF" />
+    <!-- Wheels & Bumpers -->
+    <circle cx="280" cy="180" r="18" fill="#1E3A8A" />
+    <circle cx="280" cy="180" r="8" fill="#FFFFFF" />
+    <circle cx="390" cy="180" r="18" fill="#1E3A8A" />
+    <circle cx="390" cy="180" r="8" fill="#FFFFFF" />
+    <!-- Ground / Ramp -->
+    <polygon points="155,190 225,160 225,166 160,192" />
+
+    <!-- Mover 1 (Left carrying sofa/box) -->
+    <circle cx="125" cy="120" r="8" />
+    <path d="M 122 130 L 132 145 L 140 165 L 134 190 H 126 L 128 170 L 118 155 L 112 190 H 104 L 115 142 Z" />
+
+    <!-- Box / Sofa Item being loaded -->
+    <polygon points="135,130 185,115 195,145 145,160" fill="#2563EB" />
+
+    <!-- Mover 2 (On Ramp guiding into truck) -->
+    <circle cx="190" cy="108" r="8" />
+    <path d="M 188 118 L 198 132 L 205 155 L 215 180 H 207 L 198 160 L 190 145 L 180 180 H 172 L 182 130 Z" />
+  </g>
+
+  <!-- Main Brand Name "SHAMMAH" -->
+  <g id="brand-text">
+    <text x="250" y="275" 
+      text-anchor="middle" 
+      font-family="system-ui, -apple-system, sans-serif" 
+      font-size="64" 
+      font-weight="900" 
+      font-style="italic" 
+      letter-spacing="2"
+      fill="#1E3A8A">
+      SHAMMAH
+    </text>
+    <!-- Little house window in the 'A' -->
+    <rect x="368" y="254" width="3.5" height="3.5" fill="#FFFFFF" />
+    <rect x="373" y="254" width="3.5" height="3.5" fill="#FFFFFF" />
+    <rect x="368" y="259" width="3.5" height="3.5" fill="#FFFFFF" />
+    <rect x="373" y="259" width="3.5" height="3.5" fill="#FFFFFF" />
+  </g>
+
+  <!-- Sub-banner "MOVERS AND CLEANERS" -->
+  <g>
+    <!-- Ribbon banner lines -->
+    <line x1="30" y1="305" x2="80" y2="305" stroke="#1E3A8A" stroke-width="4" stroke-linecap="round" />
+    <polygon points="80,290 420,290 415,320 85,320" fill="#1E3A8A" />
+    <line x1="420" y1="305" x2="470" y2="305" stroke="#1E3A8A" stroke-width="4" stroke-linecap="round" />
+    
+    <text x="250" y="311" 
+      text-anchor="middle" 
+      font-family="system-ui, -apple-system, sans-serif" 
+      font-size="19" 
+      font-weight="800" 
+      letter-spacing="4.5"
+      fill="#FFFFFF">
+      MOVERS AND CLEANERS
+    </text>
+  </g>
+
+  <!-- Bottom Arch (Cleaning Elements) -->
+  <path d="M 120 330 A 150 150 0 0 0 380 330" fill="none" stroke="#1E3A8A" stroke-width="8" stroke-linecap="round" />
+
+  <!-- Cleaning Elements in Center Bottom -->
+  <g fill="#1E3A8A">
+    <!-- Broom -->
+    <line x1="250" y1="325" x2="230" y2="368" stroke="#1E3A8A" stroke-width="5" stroke-linecap="round" />
+    <path d="M 230 368 L 210 392 L 235 398 L 245 372 Z" fill="#1E3A8A" />
+    <line x1="218" y1="392" x2="228" y2="375" stroke="#FFFFFF" stroke-width="1.5" />
+    <line x1="225" y1="394" x2="233" y2="378" stroke="#FFFFFF" stroke-width="1.5" />
+
+    <!-- Cleaning Bucket with handle & soap bubbles -->
+    <path d="M 260 365 L 264 395 H 288 L 292 365 Z" fill="#1E3A8A" />
+    <!-- Foam towel hanging over bucket -->
+    <path d="M 270 360 C 270 358 284 358 284 365 L 282 380 L 274 380 Z" fill="#FFFFFF" stroke="#1E3A8A" stroke-width="2" />
+    <!-- Sparkles -->
+    <path d="M 185 348 Q 188 348 188 343 Q 188 348 191 348 Q 188 348 188 353 Q 188 348 185 348 Z" fill="#8B5CF6" />
+    <path d="M 305 342 Q 308 342 308 337 Q 308 342 311 342 Q 308 342 308 347 Q 308 342 305 342 Z" fill="#8B5CF6" />
+    <path d="M 330 355 Q 334 355 334 349 Q 334 355 338 355 Q 334 355 334 361 Q 334 355 330 355 Z" fill="#8B5CF6" />
+    <circle cx="170" cy="358" r="2.5" fill="#8B5CF6" />
+    <circle cx="345" cy="345" r="2.5" fill="#8B5CF6" />
+  </g>
+</svg>
