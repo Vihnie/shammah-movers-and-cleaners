@@ -47,6 +47,7 @@ import { AdminGallery } from './components/admin/AdminGallery';
 import { AdminFAQ } from './components/admin/AdminFAQ';
 import { AdminReports } from './components/admin/AdminReports';
 import { AdminSettings } from './components/admin/AdminSettings';
+import { AdminGoogleSheets } from './components/admin/AdminGoogleSheets';
 
 import { CalculatorState, PackageTierId, ServiceType, BookingDetails } from './types';
 import { SAMPLE_BOOKINGS } from './data/mockData';
@@ -225,6 +226,8 @@ export default function App() {
       adminChild = <AdminFAQ />;
     } else if (cleanAdminRoute === '/reports') {
       adminChild = <AdminReports />;
+    } else if (cleanAdminRoute === '/sheets' || cleanAdminRoute === '/google-sheets') {
+      adminChild = <AdminGoogleSheets />;
     } else if (cleanAdminRoute === '/settings') {
       adminChild = <AdminSettings />;
     } else {

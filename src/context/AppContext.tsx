@@ -50,8 +50,10 @@ interface AppContextType {
 
   // Authentication
   isAdminLoggedIn: boolean;
+  isAdminAuthenticated: boolean;
   adminUser: AdminUser | null;
   loginAdmin: (email: string, pass: string) => boolean;
+  loginWithGoogleUser: (name: string, email: string, role?: string) => void;
   logoutAdmin: () => void;
 
   // CRM Data
@@ -202,6 +204,18 @@ export function AppProvider({ children }: { children: ReactNode }) {
       return true;
     }
     return false;
+  };
+
+  const loginWithGoogleUser = (name: string, email: string, role = 'Authorized Administrator') => {
+    const user: AdminUser = {
+      name: name || email.split('@')[0],
+      email,
+      role,
+    };
+    setIsAdminLoggedIn(true);
+    setAdminUser(user);
+    saveToStorage('admin_auth', true);
+    saveToStorage('admin_user', user);
   };
 
   const logoutAdmin = () => {
@@ -800,8 +814,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         currentRoute,
         navigateTo,
         isAdminLoggedIn,
+        isAdminAuthenticated: isAdminLoggedIn,
         adminUser,
         loginAdmin,
+        loginWithGoogleUser,
         logoutAdmin,
         leads,
         addLead,

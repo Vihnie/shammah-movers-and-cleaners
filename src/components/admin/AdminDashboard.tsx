@@ -29,6 +29,7 @@ import {
   Inbox,
   Send,
   Eye,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -183,6 +184,13 @@ export function AdminDashboard() {
           >
             <Users className="w-3.5 h-3.5" />
             <span>Inbound Leads ({newLeadsCount})</span>
+          </button>
+          <button
+            onClick={() => navigateTo('/admin/sheets')}
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5" />
+            <span>Google Sheets Sync</span>
           </button>
           <button
             onClick={() => navigateTo('/admin/payments')}

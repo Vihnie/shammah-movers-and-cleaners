@@ -23,6 +23,7 @@ import {
   ExternalLink,
   Bell,
   ShieldCheck,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
@@ -54,6 +55,7 @@ export function AdminLayout({ children, activeModule }: AdminLayoutProps) {
     { id: 'gallery', label: 'Gallery & Photos', icon: Image, route: '/admin/gallery' },
     { id: 'faq', label: 'FAQ Manager', icon: HelpCircle, route: '/admin/faq' },
     { id: 'content', label: 'Website Content', icon: Edit3, route: '/admin/content' },
+    { id: 'sheets', label: 'Google Sheets Sync', icon: FileSpreadsheet, route: '/admin/sheets' },
     { id: 'reports', label: 'Reports & Analytics', icon: BarChart3, route: '/admin/reports' },
     { id: 'settings', label: 'Business Settings', icon: Settings, route: '/admin/settings' },
   ];
