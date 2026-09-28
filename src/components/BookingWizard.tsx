@@ -1,724 +1,631 @@
 import React, { useState } from 'react';
-import { 
-  CheckCircle2, 
-  Calendar, 
-  Clock, 
-  MapPin, 
-  User, 
-  Phone, 
-  Mail, 
-  MessageSquare, 
-  ArrowLeft, 
-  ArrowRight, 
-  ShieldCheck, 
-  Package, 
-  Sparkles, 
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  User,
+  Phone,
+  Mail,
+  CheckCircle2,
+  ArrowRight,
+  ArrowLeft,
+  ShieldCheck,
   Truck,
   CreditCard,
-  DollarSign,
-  AlertCircle
+  FileText,
+  Sparkles
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { CalculatorState, PackageTierId, BookingDetails, ServiceType } from '../types';
-import { PACKAGE_TIERS, INVENTORY_CATEGORIES } from '../data/mockData';
-import { calculatePrice, formatCurrency } from '../utils/pricing';
+import { useApp } from '../context/AppContext';
+import { Booking, CalculatorState, PackageTierId, BookingDetails } from '../types';
 
-interface BookingWizardProps {
-  calcState: CalculatorState;
-  setCalcState: React.Dispatch<React.SetStateAction<CalculatorState>>;
-  onBookingSuccess: (booking: BookingDetails) => void;
-  onClose: () => void;
+export interface BookingWizardProps {
+  calcState?: CalculatorState;
+  setCalcState?: React.Dispatch<React.SetStateAction<CalculatorState>>;
+  onBookingSuccess?: (newBooking: BookingDetails) => void;
+  onClose?: () => void;
 }
 
-export function BookingWizard({ calcState, setCalcState, onBookingSuccess, onClose }: BookingWizardProps) {
-  const [currentStep, setCurrentStep] = useState<number>(1);
-  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+export const BookingWizard: React.FC<BookingWizardProps> = ({ calcState, setCalcState, onBookingSuccess, onClose }) => {
+  const { createBooking, setCurrentView, setSelectedBookingId } = useApp();
 
-  // Form State
-  const [moveDate, setMoveDate] = useState<string>(() => {
-    const nextWeek = new Date();
-    nextWeek.setDate(nextWeek.getDate() + 4);
-    return nextWeek.toISOString().split('T')[0];
+  const [step, setStep] = useState<number>(1);
+  const [formData, setFormData] = useState({
+    customer_name: '',
+    customer_phone: '',
+    customer_email: '',
+    service_type: 'Residential Home Moves',
+    tier: 'complete-care',
+    tier_name: 'Complete Care Move',
+    move_date: '',
+    time_slot: '08:00 - 10:00 (Morning Slot)',
+    pickup_address: '',
+    dropoff_address: '',
+    total_price: 580,
+    payment_method: 'Card on Completion',
+    notes: '',
+    propertyType: '2-Bed House / Flat',
+    packingService: 'Fragile Packing'
   });
-  const [timeSlot, setTimeSlot] = useState<'morning' | 'afternoon' | 'all_day'>('morning');
-  const [pickupAddress, setPickupAddress] = useState<string>('');
-  const [dropoffAddress, setDropoffAddress] = useState<string>('');
-  const [pickupAccess, setPickupAccess] = useState<string>('Ground floor / Elevator available');
-  const [dropoffAccess, setDropoffAccess] = useState<string>('Ground floor');
-  const [selectedInventory, setSelectedInventory] = useState<string[]>([
-    '3-Seater Sofa / Sectional',
-    'King / Queen Bed Frame + Mattress',
-    'Dining Table + 4-6 Chairs',
-    '10 - 20 Standard Moving Boxes'
-  ]);
-  const [specialInstructions, setSpecialInstructions] = useState<string>('');
-  
-  const [customerName, setCustomerName] = useState<string>('');
-  const [customerPhone, setCustomerPhone] = useState<string>('');
-  const [customerEmail, setCustomerEmail] = useState<string>('');
-  const [contactViaWhatsApp, setContactViaWhatsApp] = useState<boolean>(true);
-  const [paymentMethod, setPaymentMethod] = useState<BookingDetails['paymentMethod']>('card_deposit');
 
-  const pricing = calculatePrice(calcState);
-  const currentTierObj = PACKAGE_TIERS.find((t) => t.id === calcState.selectedTier) || PACKAGE_TIERS[1];
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [createdBooking, setCreatedBooking] = useState<Booking | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const toggleInventoryItem = (item: string) => {
-    setSelectedInventory((prev) =>
-      prev.includes(item) ? prev.filter((i) => i !== item) : [...prev, item]
-    );
-  };
-
-  const validateStep = (step: number): boolean => {
-    const errors: Record<string, string> = {};
+  const handleNextStep = () => {
+    setErrorMessage(null);
+    if (step === 1) {
+      if (!formData.pickup_address.trim() || !formData.dropoff_address.trim()) {
+        setErrorMessage('Please enter both pickup and destination addresses.');
+        return;
+      }
+      if (!formData.move_date) {
+        setErrorMessage('Please select your target move date.');
+        return;
+      }
+    }
     if (step === 2) {
-      if (!pickupAddress.trim()) errors.pickupAddress = 'Pickup address is required';
-      if (calcState.serviceType !== 'cleaning' && !dropoffAddress.trim()) {
-        errors.dropoffAddress = 'Destination address is required for moving';
-      }
-      if (!moveDate) errors.moveDate = 'Please pick a preferred service date';
-    } else if (step === 4) {
-      if (!customerName.trim()) errors.customerName = 'Full name is required';
-      if (!customerPhone.trim() || customerPhone.length < 7) {
-        errors.customerPhone = 'Valid phone number is required for crew dispatch';
-      }
-      if (!customerEmail.trim() || !customerEmail.includes('@')) {
-        errors.customerEmail = 'Valid email address is required for booking receipt';
+      // Step 2 service & tiers
+    }
+    if (step === 3) {
+      if (!formData.customer_name.trim() || !formData.customer_phone.trim() || !formData.customer_email.trim()) {
+        setErrorMessage('Please fill in your full name, phone number, and email.');
+        return;
       }
     }
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    setStep((prev) => Math.min(prev + 1, 4));
   };
 
-  const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((s) => Math.min(4, s + 1));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+  const handlePreviousStep = () => {
+    setErrorMessage(null);
+    setStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleBack = () => {
-    setCurrentStep((s) => Math.max(1, s - 1));
-  };
-
-  const handleSubmitBooking = (e: React.FormEvent) => {
+  const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateStep(4)) return;
+    setErrorMessage(null);
+    setIsSubmitting(true);
 
-    // Generate reference code
-    const randomCode = Math.floor(1000 + Math.random() * 9000);
-    const bookingId = `SHM-${randomCode}`;
+    const bookingId = `SM-${Math.floor(10000 + Math.random() * 90000)}`;
 
-    const newBooking: BookingDetails = {
+    const bookingPayload: Partial<Booking> = {
       id: bookingId,
-      createdAt: new Date().toISOString(),
-      serviceType: calcState.serviceType,
-      tier: calcState.selectedTier,
-      tierName: currentTierObj.name,
-      pricing,
-      calculatorState: calcState,
-      moveDate,
-      timeSlot,
-      pickupAddress,
-      dropoffAddress: calcState.serviceType === 'cleaning' ? pickupAddress : dropoffAddress,
-      pickupAccess,
-      dropoffAccess,
-      selectedInventory,
-      specialInstructions,
-      customerName,
-      customerPhone,
-      customerEmail,
-      contactViaWhatsApp,
-      paymentMethod,
-      status: 'confirmed',
-      assignedCrew: {
-        leadName: 'Davis Kiprono (Senior Lead)',
-        leadPhone: '0181460645',
-        truckNumber: 'Shammah Fleet Unit #04',
-        crewCount: currentTierObj.id === 'white_glove' ? 5 : currentTierObj.id === 'pro' ? 4 : 2,
-      },
+      customer_name: formData.customer_name,
+      customer_phone: formData.customer_phone,
+      customer_email: formData.customer_email,
+      service_type: formData.service_type,
+      tier: formData.tier as PackageTierId,
+      tier_name: formData.tier_name,
+      move_date: formData.move_date,
+      time_slot: formData.time_slot,
+      pickup_address: formData.pickup_address,
+      dropoff_address: formData.dropoff_address,
+      total_price: formData.total_price,
+      payment_method: formData.payment_method,
+      status: 'Confirmed',
+      details_json: JSON.stringify({
+        propertyType: formData.propertyType,
+        packingService: formData.packingService,
+        notes: formData.notes
+      })
     };
 
-    // Confetti animation
-    try {
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-        colors: ['#1E3A8A', '#8B5CF6', '#3B82F6', '#10B981'],
-      });
-    } catch {
-      // ignore
-    }
+    const res = await createBooking(bookingPayload);
+    setIsSubmitting(false);
 
-    onBookingSuccess(newBooking);
+    if (res) {
+      setCreatedBooking(res);
+      if (onBookingSuccess) {
+        onBookingSuccess(res);
+      }
+      setSelectedBookingId(res.id);
+      try {
+        confetti({
+          particleCount: 90,
+          spread: 70,
+          origin: { y: 0.6 }
+        });
+      } catch (err) {
+        // Confetti non-fatal
+      }
+    } else {
+      setErrorMessage('Failed to submit booking. Please try again or call dispatch directly.');
+    }
   };
 
-  return (
-    <section id="book" className="py-12 lg:py-16 bg-slate-100/80 min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        
-        {/* Wizard Container Card */}
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
-          
-          {/* Header Banner */}
-          <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-2xl p-1.5 shrink-0 shadow">
-                <img src="/logo.svg" alt="Shammah Logo" className="w-full h-full object-contain" />
-              </div>
-              <div>
-                <span className="text-purple-300 text-xs font-bold uppercase tracking-wider">
-                  Direct Service Reservation
-                </span>
-                <h2 className="text-xl sm:text-2xl font-black text-white">
-                  Book Shammah Movers & Cleaners
-                </h2>
-              </div>
-            </div>
+  if (createdBooking) {
+    return (
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-slate-50 min-h-[70vh] flex items-center justify-center">
+        <div className="max-w-2xl w-full bg-white rounded-3xl p-8 sm:p-10 shadow-xl border border-slate-200 text-center space-y-6">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto ring-8 ring-emerald-50">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
 
-            <div className="bg-white/10 backdrop-blur-md px-3.5 py-1.5 rounded-xl text-right shrink-0 border border-white/10">
-              <span className="text-[10px] text-blue-200 block uppercase font-bold">Estimated Total</span>
-              <span className="text-xl font-black text-purple-200">
-                {formatCurrency(pricing.totalPrice)}
+          <div className="space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full">
+              Booking Reserved &amp; Scheduled
+            </span>
+            <h2 className="text-3xl font-extrabold text-slate-900">Thank You, {createdBooking.customer_name}!</h2>
+            <p className="text-sm text-slate-600">
+              Your move has been confirmed in our dispatch system. We have dispatched a confirmation email and SMS.
+            </p>
+          </div>
+
+          <div className="bg-slate-50 rounded-2xl p-6 border border-slate-200 text-left space-y-3 text-xs">
+            <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+              <span className="text-slate-500 font-medium">Booking Reference</span>
+              <span className="font-extrabold text-base text-slate-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                {createdBooking.id}
               </span>
             </div>
-          </div>
-
-          {/* Stepper Progress Bar */}
-          <div className="bg-slate-50 border-b border-slate-200 px-6 py-4">
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { step: 1, label: 'Service & Tier' },
-                { step: 2, label: 'Schedule & Address' },
-                { step: 3, label: 'Inventory / Items' },
-                { step: 4, label: 'Contact Details' },
-              ].map((item) => {
-                const isCurrent = currentStep === item.step;
-                const isPassed = currentStep > item.step;
-                return (
-                  <div
-                    key={item.step}
-                    className="flex flex-col items-center sm:items-start text-center sm:text-left"
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      <div
-                        className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center transition-all ${
-                          isPassed
-                            ? 'bg-emerald-600 text-white'
-                            : isCurrent
-                            ? 'bg-blue-900 text-white ring-4 ring-blue-100'
-                            : 'bg-slate-200 text-slate-600'
-                        }`}
-                      >
-                        {isPassed ? <CheckCircle2 className="w-4 h-4" /> : item.step}
-                      </div>
-                      <div
-                        className={`hidden sm:block text-xs font-bold ${
-                          isCurrent ? 'text-blue-900' : isPassed ? 'text-slate-800' : 'text-slate-400'
-                        }`}
-                      >
-                        {item.label}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Service Plan</span>
+              <span className="font-semibold text-slate-900">{createdBooking.tier_name}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Scheduled Date</span>
+              <span className="font-semibold text-slate-900">{createdBooking.move_date} ({createdBooking.time_slot})</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Pickup</span>
+              <span className="font-semibold text-slate-900 truncate max-w-[280px]">{createdBooking.pickup_address}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-500">Destination</span>
+              <span className="font-semibold text-slate-900 truncate max-w-[280px]">{createdBooking.dropoff_address}</span>
+            </div>
+            <div className="flex justify-between items-center border-t border-slate-200 pt-2 text-sm">
+              <span className="font-bold text-slate-900">Total Price</span>
+              <span className="font-extrabold text-amber-600">£{createdBooking.total_price} ({createdBooking.payment_method})</span>
             </div>
           </div>
 
-          {/* Wizard Body Content */}
-          <div className="p-6 sm:p-8">
-            
-            {/* STEP 1: Service & Package Confirmation */}
-            {currentStep === 1 && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="border-b border-slate-200 pb-4">
-                  <h3 className="text-lg font-bold text-slate-900">
-                    Step 1: Confirm Package & Property Details
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Review or adjust your moving/cleaning tier based on your square footage.
-                  </p>
-                </div>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={() => {
+                setSelectedBookingId(createdBooking.id);
+                setCurrentView('tracking');
+              }}
+              className="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 px-4 rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <Truck className="w-4 h-4" />
+              <span>Track This Move Live</span>
+            </button>
+            <button
+              onClick={() => setCurrentView('home')}
+              className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-3 px-4 rounded-xl text-xs transition-colors cursor-pointer"
+            >
+              Back to Homepage
+            </button>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-                {/* Service type selector */}
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    { id: 'combo', label: 'Move + Clean (Save 15%)', icon: Sparkles },
-                    { id: 'moving', label: 'Moving Only', icon: Truck },
-                    { id: 'cleaning', label: 'Cleaning Only', icon: Sparkles },
-                  ].map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => setCalcState((prev) => ({ ...prev, serviceType: s.id as ServiceType }))}
-                      className={`p-3 rounded-2xl border text-center transition-all ${
-                        calcState.serviceType === s.id
-                          ? 'border-blue-900 bg-blue-50/70 text-blue-900 font-extrabold ring-2 ring-blue-800'
-                          : 'border-slate-200 text-slate-600 hover:bg-slate-50'
-                      }`}
-                    >
-                      <s.icon className="w-5 h-5 mx-auto mb-1 text-purple-600" />
-                      <div className="text-xs">{s.label}</div>
-                    </button>
-                  ))}
-                </div>
+  return (
+    <section className="py-12 px-4 sm:px-6 lg:px-8 bg-slate-50" id="booking-wizard">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <span className="text-xs font-bold uppercase tracking-wider text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+            Official Booking Dispatch
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mt-2">
+            Book Your Move in 4 Simple Steps
+          </h2>
+          <p className="text-slate-600 text-sm mt-1">
+            Complete the form below to lock in your date, crew, and insurance coverage.
+          </p>
+        </div>
 
-                {/* Selected Tier Card */}
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-slate-700 block">
-                    Choose Package Tier:
+        {/* Step Indicator */}
+        <div className="flex items-center justify-between max-w-2xl mx-auto mb-8 relative">
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 w-full bg-slate-200 -z-0" />
+          {[
+            { num: 1, label: 'Addresses & Date' },
+            { num: 2, label: 'Plan & Options' },
+            { num: 3, label: 'Your Details' },
+            { num: 4, label: 'Confirmation' }
+          ].map((s) => (
+            <div key={s.num} className="relative z-10 flex flex-col items-center">
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs transition-all ${
+                  step === s.num
+                    ? 'bg-amber-500 text-slate-950 ring-4 ring-amber-100 font-extrabold'
+                    : step > s.num
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-white text-slate-500 border border-slate-300'
+                }`}
+              >
+                {step > s.num ? <CheckCircle2 className="w-4 h-4" /> : s.num}
+              </div>
+              <span className="text-[11px] font-medium text-slate-600 mt-1.5 hidden sm:block">
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {errorMessage && (
+          <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center gap-2">
+            <span>⚠️ {errorMessage}</span>
+          </div>
+        )}
+
+        <div className="bg-white rounded-2xl p-6 sm:p-10 shadow-sm border border-slate-200">
+          {/* STEP 1: Addresses and Date */}
+          {step === 1 && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">
+                Step 1: Where and When Are You Moving?
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Pickup Address &amp; Postcode *
                   </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    {PACKAGE_TIERS.map((tier) => {
-                      const isSelected = calcState.selectedTier === tier.id;
-                      const tierPrice = calculatePrice({ ...calcState, selectedTier: tier.id });
-                      return (
-                        <div
-                          key={tier.id}
-                          onClick={() => setCalcState((p) => ({ ...p, selectedTier: tier.id }))}
-                          className={`p-4 rounded-2xl cursor-pointer border transition-all ${
-                            isSelected
-                              ? 'border-purple-600 bg-purple-50/80 ring-2 ring-purple-600 text-slate-900'
-                              : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                          }`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="font-bold text-sm text-slate-900">{tier.name.split(' ')[0]}</span>
-                            <span className="font-extrabold text-blue-900 text-sm">
-                              {formatCurrency(tierPrice.totalPrice)}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-slate-500 line-clamp-2">
-                            {tier.tagline}
-                          </p>
-                        </div>
-                      );
-                    })}
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 14 Kensington High St, London W8 4SG"
+                      value={formData.pickup_address}
+                      onChange={(e) => setFormData({ ...formData, pickup_address: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                    />
                   </div>
                 </div>
 
-                {/* Quick specs summary */}
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                  <div>
-                    <span className="text-slate-500 block">Property Size</span>
-                    <strong className="text-slate-800">{calcState.sqft} sq ft</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Distance</span>
-                    <strong className="text-slate-800">{calcState.distanceMiles} miles</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Crew Size</span>
-                    <strong className="text-slate-800">{currentTierObj.movingCrew}</strong>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block">Truck Unit</span>
-                    <strong className="text-slate-800">{currentTierObj.truckSize}</strong>
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Destination Address &amp; Postcode *
+                  </label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 22 Highfield Rd, Winchester SO21 2NT"
+                      value={formData.dropoff_address}
+                      onChange={(e) => setFormData({ ...formData, dropoff_address: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                    />
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* STEP 2: Schedule & Addresses */}
-            {currentStep === 2 && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="border-b border-slate-200 pb-4">
-                  <h3 className="text-lg font-bold text-slate-900">
-                    Step 2: Schedule & Location Addresses
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Where and when should our Shammah crew arrive?
-                  </p>
-                </div>
-
-                {/* Date and Time Slot */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      <Calendar className="w-4 h-4 text-blue-900" />
-                      <span>Preferred Service Date *</span>
-                    </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Target Moving Date *
+                  </label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                     <input
                       type="date"
-                      value={moveDate}
-                      onChange={(e) => setMoveDate(e.target.value)}
-                      className={`w-full p-3 bg-slate-50 rounded-xl border text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900 ${
-                        formErrors.moveDate ? 'border-red-500 bg-red-50' : 'border-slate-300'
-                      }`}
+                      required
+                      value={formData.move_date}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setFormData({ ...formData, move_date: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
                     />
-                    {formErrors.moveDate && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.moveDate}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-blue-900" />
-                      <span>Preferred Arrival Window *</span>
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {[
-                        { id: 'morning', label: 'Morning (8am - 11am)' },
-                        { id: 'afternoon', label: 'Afternoon (1pm - 4pm)' },
-                        { id: 'all_day', label: 'Flexible Window' },
-                      ].map((slot) => (
-                        <button
-                          key={slot.id}
-                          type="button"
-                          onClick={() => setTimeSlot(slot.id as any)}
-                          className={`p-2 rounded-xl text-xs font-bold border text-center transition-colors ${
-                            timeSlot === slot.id
-                              ? 'bg-blue-900 text-white border-blue-900'
-                              : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                          }`}
-                        >
-                          {slot.label}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                 </div>
 
-                {/* Pickup Address */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4 text-blue-900" />
-                    <span>
-                      {calcState.serviceType === 'cleaning'
-                        ? 'Service / Residence Address *'
-                        : 'Pickup / Origin Address *'}
-                    </span>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Preferred Time Slot
                   </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Juja, Sanne Square, Apt 4B or Kilimani, Nairobi"
-                    value={pickupAddress}
-                    onChange={(e) => setPickupAddress(e.target.value)}
-                    className={`w-full p-3 bg-slate-50 rounded-xl border text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900 ${
-                      formErrors.pickupAddress ? 'border-red-500 bg-red-50' : 'border-slate-300'
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                    <select
+                      value={formData.time_slot}
+                      onChange={(e) => setFormData({ ...formData, time_slot: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                    >
+                      <option value="08:00 - 10:00 (Morning Slot)">08:00 - 10:00 (Morning Slot - Recommended)</option>
+                      <option value="12:00 - 14:00 (Afternoon Slot)">12:00 - 14:00 (Afternoon Slot)</option>
+                      <option value="16:00 - 18:00 (Evening Slot)">16:00 - 18:00 (Evening Slot)</option>
+                      <option value="Flexible / All-Day Window">Flexible / All-Day Window</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  Property Size / Scope
+                </label>
+                <select
+                  value={formData.propertyType}
+                  onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="Studio / Single Room">Studio / Single Room</option>
+                  <option value="1-Bed Apartment">1-Bed Apartment</option>
+                  <option value="2-Bed House / Flat">2-Bed House / Flat</option>
+                  <option value="3-Bed Family House">3-Bed Family House</option>
+                  <option value="4+ Bed Detached Estate">4+ Bed Detached Estate</option>
+                  <option value="Office / Commercial Space">Office / Commercial Space</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Plan and Service Options */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">
+                Step 2: Choose Service Tier &amp; Packing Option
+              </h3>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  {
+                    id: 'standard',
+                    name: 'Standard Move',
+                    price: 380,
+                    crew: '2 Movers + Luton Van',
+                    desc: 'Safe loading, transport, unloading, protective straps.'
+                  },
+                  {
+                    id: 'complete-care',
+                    name: 'Complete Care Move',
+                    price: 580,
+                    crew: '3 Movers + Luton / 7.5t',
+                    desc: 'Dismantling/assembly, sofa covers, floor protection, priority care.'
+                  },
+                  {
+                    id: 'white-glove',
+                    name: 'White-Glove VIP',
+                    price: 890,
+                    crew: '4 Movers + Full Packing',
+                    desc: 'Complete packing of all boxes, wardrobe boxes, unpack to surfaces.'
+                  }
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        tier: t.id,
+                        tier_name: t.name,
+                        total_price: t.price
+                      })
+                    }
+                    className={`p-4 rounded-xl border text-left cursor-pointer transition-all ${
+                      formData.tier === t.id
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
-                  />
-                  {formErrors.pickupAddress && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.pickupAddress}</p>
-                  )}
-                </div>
-
-                {/* Dropoff Address (if moving or combo) */}
-                {calcState.serviceType !== 'cleaning' && (
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4 text-purple-700" />
-                      <span>Destination / Drop-off Address *</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Karen, Mbagathi Ridge, Nairobi"
-                      value={dropoffAddress}
-                      onChange={(e) => setDropoffAddress(e.target.value)}
-                      className={`w-full p-3 bg-slate-50 rounded-xl border text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900 ${
-                        formErrors.dropoffAddress ? 'border-red-500 bg-red-50' : 'border-slate-300'
-                      }`}
-                    />
-                    {formErrors.dropoffAddress && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.dropoffAddress}</p>
-                    )}
-                  </div>
-                )}
-
-                {/* Access Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Origin Access Details
-                    </label>
-                    <select
-                      value={pickupAccess}
-                      onChange={(e) => setPickupAccess(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-300 text-xs text-slate-800"
-                    >
-                      <option value="Ground floor / Driveway">Ground floor / Driveway</option>
-                      <option value="Elevator Available">Elevator Available</option>
-                      <option value="1 Flight of Stairs">1 Flight of Stairs</option>
-                      <option value="2+ Flights of Stairs">2+ Flights of Stairs</option>
-                      <option value="Narrow Street / Loading Dock">Narrow Street / Loading Dock</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Destination Access Details
-                    </label>
-                    <select
-                      value={dropoffAccess}
-                      onChange={(e) => setDropoffAccess(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 rounded-xl border border-slate-300 text-xs text-slate-800"
-                    >
-                      <option value="Ground Floor Driveway">Ground Floor Driveway</option>
-                      <option value="Elevator Available">Elevator Available</option>
-                      <option value="1-2 Flights of Stairs">1-2 Flights of Stairs</option>
-                      <option value="Gated Community / Security Access">Gated Community / Security Access</option>
-                    </select>
-                  </div>
-                </div>
+                  >
+                    <div className="font-bold text-sm text-slate-900">{t.name}</div>
+                    <div className="text-lg font-black text-amber-600 mt-1">£{t.price}</div>
+                    <div className="text-[11px] font-semibold text-slate-700 mt-1">{t.crew}</div>
+                    <p className="text-[11px] text-slate-500 mt-2">{t.desc}</p>
+                  </button>
+                ))}
               </div>
-            )}
 
-            {/* STEP 3: Inventory Checklist & Special Requirements */}
-            {currentStep === 3 && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="border-b border-slate-200 pb-4">
-                  <h3 className="text-lg font-bold text-slate-900">
-                    Step 3: Inventory Checklist & Special Notes
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Tag the major items so our dispatch team assigns the perfect truck equipment.
-                  </p>
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  Packing Service Preference
+                </label>
+                <select
+                  value={formData.packingService}
+                  onChange={(e) => setFormData({ ...formData, packingService: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="Self-Pack (You pack all boxes)">Self-Pack (You pack all boxes)</option>
+                  <option value="Fragile Packing (Kitchen china, mirrors, fine art)">Fragile Packing (Kitchen china, mirrors, fine art)</option>
+                  <option value="Full Professional Packing (Everything boxed for you)">Full Professional Packing (Everything boxed for you)</option>
+                </select>
+              </div>
 
-                <div className="space-y-4">
-                  {INVENTORY_CATEGORIES.map((cat, idx) => (
-                    <div key={idx} className="bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                      <h4 className="text-xs font-extrabold text-blue-950 uppercase tracking-wider mb-2.5">
-                        {cat.category}
-                      </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {cat.items.map((item) => {
-                          const isSelected = selectedInventory.includes(item);
-                          return (
-                            <button
-                              key={item}
-                              type="button"
-                              onClick={() => toggleInventoryItem(item)}
-                              className={`p-2 rounded-xl text-left text-xs flex items-center justify-between border transition-all ${
-                                isSelected
-                                  ? 'bg-blue-900 text-white border-blue-900 font-semibold shadow-xs'
-                                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                              }`}
-                            >
-                              <span className="truncate pr-2">{item}</span>
-                              <div
-                                className={`w-4 h-4 rounded flex items-center justify-center shrink-0 ${
-                                  isSelected ? 'bg-purple-500 text-white' : 'border border-slate-300'
-                                }`}
-                              >
-                                {isSelected && <CheckCircle2 className="w-3 h-3" />}
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                  Special Instructions or Access Notes
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g., Narrow driveway, narrow stairs, parking suspension booked, piano on site..."
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+            </div>
+          )}
 
-                {/* Special Instructions */}
+          {/* STEP 3: Contact Details */}
+          {step === 3 && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">
+                Step 3: Contact Information &amp; Dispatch Point
+              </h3>
+
+              <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Special Instructions / Gate Codes / Fragile Items
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Lead Customer Full Name *
                   </label>
-                  <textarea
-                    rows={3}
-                    placeholder="e.g. Marble dining top needs special wrap; elevator key booked with building management from 9 AM; please call upon arrival at gate 4."
-                    value={specialInstructions}
-                    onChange={(e) => setSpecialInstructions(e.target.value)}
-                    className="w-full p-3 bg-slate-50 rounded-xl border border-slate-300 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* STEP 4: Contact Info & Final Confirmation */}
-            {currentStep === 4 && (
-              <div className="space-y-6 animate-fade-in">
-                <div className="border-b border-slate-200 pb-4">
-                  <h3 className="text-lg font-bold text-slate-900">
-                    Step 4: Customer Details & Final Confirmation
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    We will send your booking confirmation reference and live crew tracking to these contacts.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      <User className="w-4 h-4 text-blue-900" />
-                      <span>Full Name *</span>
-                    </label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
                     <input
                       type="text"
+                      required
                       placeholder="e.g. Sarah Jenkins"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className={`w-full p-3 bg-slate-50 rounded-xl border text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900 ${
-                        formErrors.customerName ? 'border-red-500 bg-red-50' : 'border-slate-300'
-                      }`}
+                      value={formData.customer_name}
+                      onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
                     />
-                    {formErrors.customerName && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.customerName}</p>
-                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                      Mobile Phone (for Driver SMS updates) *
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                      <input
+                        type="tel"
+                        required
+                        placeholder="e.g. +44 7700 900123"
+                        value={formData.customer_phone}
+                        onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                      <Phone className="w-4 h-4 text-blue-900" />
-                      <span>Phone Number *</span>
+                    <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                      Email Address (for Booking Voucher) *
                     </label>
-                    <input
-                      type="tel"
-                      placeholder="e.g. +254 712 345 678"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      className={`w-full p-3 bg-slate-50 rounded-xl border text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900 ${
-                        formErrors.customerPhone ? 'border-red-500 bg-red-50' : 'border-slate-300'
-                      }`}
-                    />
-                    {formErrors.customerPhone && (
-                      <p className="text-red-500 text-xs mt-1">{formErrors.customerPhone}</p>
-                    )}
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
+                      <input
+                        type="email"
+                        required
+                        placeholder="e.g. sarah.j@example.com"
+                        value={formData.customer_email}
+                        onChange={(e) => setFormData({ ...formData, customer_email: e.target.value })}
+                        className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-9 pr-4 py-2.5 text-xs text-slate-900 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                    <Mail className="w-4 h-4 text-blue-900" />
-                    <span>Email Address (for receipt & calendar invite) *</span>
+                  <label className="block text-xs font-bold text-slate-800 mb-1.5">
+                    Preferred Payment Method
                   </label>
-                  <input
-                    type="email"
-                    placeholder="e.g. sarah.jenkins@example.com"
-                    value={customerEmail}
-                    onChange={(e) => setCustomerEmail(e.target.value)}
-                    className={`w-full p-3 bg-slate-50 rounded-xl border text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-900 ${
-                      formErrors.customerEmail ? 'border-red-500 bg-red-50' : 'border-slate-300'
-                    }`}
-                  />
-                  {formErrors.customerEmail && (
-                    <p className="text-red-500 text-xs mt-1">{formErrors.customerEmail}</p>
-                  )}
-                </div>
-
-                {/* WhatsApp Notification Toggle */}
-                <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
-                      <MessageSquare className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <span className="font-bold text-xs text-emerald-950 block">
-                        Receive instant WhatsApp Booking Updates & Crew ETA
-                      </span>
-                      <span className="text-[10px] text-emerald-700">
-                        Direct notifications when crew departs and reaches destination
-                      </span>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={contactViaWhatsApp}
-                    onChange={(e) => setContactViaWhatsApp(e.target.checked)}
-                    className="w-5 h-5 accent-emerald-600 rounded cursor-pointer"
-                  />
-                </div>
-
-                {/* Payment preference */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-2">
-                    Payment Preference (Settled upon completion / inspection)
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                     {[
-                      { id: 'card_deposit', label: 'Credit / Debit Card', icon: CreditCard },
-                      { id: 'cash_on_delivery', label: 'Cash on Completion', icon: DollarSign },
-                      { id: 'bank_transfer', label: 'Bank Wire / ACH', icon: ShieldCheck },
-                      { id: 'mobile_money', label: 'Mobile Money / M-Pesa', icon: Phone },
+                      { id: 'Card on Completion', label: 'Card on Completion', icon: CreditCard },
+                      { id: 'Bank Transfer (BACS)', label: 'Bank Transfer (BACS)', icon: FileText },
+                      { id: 'Corporate Invoice', label: 'Company 30-Day Net', icon: Truck }
                     ].map((p) => (
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setPaymentMethod(p.id as any)}
-                        className={`p-3 rounded-xl border text-center text-xs font-semibold transition-all ${
-                          paymentMethod === p.id
-                            ? 'bg-blue-900 text-white border-blue-900'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                        onClick={() => setFormData({ ...formData, payment_method: p.id })}
+                        className={`p-3 rounded-lg border text-left text-xs cursor-pointer flex items-center gap-2 ${
+                          formData.payment_method === p.id
+                            ? 'border-amber-500 bg-amber-50 font-bold text-slate-900'
+                            : 'border-slate-200 text-slate-700'
                         }`}
                       >
-                        <p.icon className="w-4 h-4 mx-auto mb-1 text-purple-300" />
+                        <p.icon className="w-4 h-4 text-amber-500" />
                         <span>{p.label}</span>
                       </button>
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
 
-                {/* Final Order Review Summary Box */}
-                <div className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 space-y-3 text-xs">
-                  <div className="flex justify-between items-center font-bold pb-2 border-b border-white/10">
-                    <span className="text-purple-300 uppercase tracking-wider text-[11px]">
-                      {calcState.serviceType.toUpperCase()} • {currentTierObj.name}
-                    </span>
-                    <span className="text-base text-white font-black">
-                      {formatCurrency(pricing.totalPrice)}
-                    </span>
+          {/* STEP 4: Review & Submit */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <h3 className="text-lg font-bold text-slate-900 border-b border-slate-100 pb-3">
+                Step 4: Review &amp; Confirm Your Reservation
+              </h3>
+
+              <div className="bg-slate-50 rounded-xl p-5 border border-slate-200 space-y-3 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Primary Contact</span>
+                    <span className="font-bold text-slate-900">{formData.customer_name}</span>
+                    <div className="text-slate-600">{formData.customer_phone} • {formData.customer_email}</div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-slate-300">
-                    <div>📅 Date: <strong className="text-white">{moveDate} ({timeSlot})</strong></div>
-                    <div>📐 Size: <strong className="text-white">{calcState.sqft} sq ft</strong></div>
-                    <div>📍 Pickup: <span className="text-white truncate block">{pickupAddress || 'Address specified'}</span></div>
-                    <div>🚚 Distance: <strong className="text-white">{calcState.distanceMiles} miles</strong></div>
+
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Scheduled Date &amp; Window</span>
+                    <span className="font-bold text-slate-900">{formData.move_date}</span>
+                    <div className="text-slate-600">{formData.time_slot}</div>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Pickup Location</span>
+                    <span className="font-semibold text-slate-900">{formData.pickup_address}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-500 block text-[11px]">Dropoff Location</span>
+                    <span className="font-semibold text-slate-900">{formData.dropoff_address}</span>
                   </div>
                 </div>
 
+                <div className="border-t border-slate-200 pt-3 flex justify-between items-center text-sm">
+                  <div>
+                    <span className="font-bold text-slate-900">{formData.tier_name}</span>
+                    <span className="text-slate-500 text-xs block">{formData.packingService}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-amber-600">£{formData.total_price}</span>
+                    <span className="text-[10px] text-slate-400 block">inc. VAT &amp; £100k insurance</span>
+                  </div>
+                </div>
               </div>
+
+              <div className="flex items-center gap-2 text-xs text-slate-600 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>By confirming, your slot is instantly reserved. No upfront payment is required today.</span>
+              </div>
+            </div>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center pt-6 border-t border-slate-100 mt-6">
+            {step > 1 ? (
+              <button
+                type="button"
+                onClick={handlePreviousStep}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg border border-slate-300 text-slate-700 text-xs font-semibold hover:bg-slate-50 cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Previous</span>
+              </button>
+            ) : (
+              <div />
             )}
 
-            {/* Form Navigation Buttons */}
-            <div className="mt-8 pt-6 border-t border-slate-200 flex items-center justify-between">
-              {currentStep > 1 ? (
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold text-xs sm:text-sm flex items-center gap-2 transition-colors"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  <span>Back</span>
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="px-5 py-2.5 rounded-xl text-slate-500 hover:text-slate-700 font-bold text-xs sm:text-sm"
-                >
-                  Cancel
-                </button>
-              )}
-
-              {currentStep < 4 ? (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="px-6 py-3 rounded-xl bg-blue-900 hover:bg-blue-800 text-white font-bold text-xs sm:text-sm flex items-center gap-2 shadow-md transition-all hover:scale-102"
-                >
-                  <span>Continue</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={handleSubmitBooking}
-                  className="px-7 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-extrabold text-sm sm:text-base flex items-center gap-2 shadow-xl shadow-purple-950/30 transition-all hover:scale-105 active:scale-95"
-                >
-                  <CheckCircle2 className="w-5 h-5 text-purple-200" />
-                  <span>Confirm & Lock In Booking</span>
-                </button>
-              )}
-            </div>
-
+            {step < 4 ? (
+              <button
+                type="button"
+                onClick={handleNextStep}
+                className="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-6 py-2.5 rounded-lg text-xs transition-all cursor-pointer"
+              >
+                <span>Continue</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleSubmitBooking}
+                className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3 rounded-lg text-xs shadow-lg shadow-emerald-600/20 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {isSubmitting ? (
+                  <span>Reserving Move...</span>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Confirm &amp; Lock In Booking</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
-
         </div>
-
       </div>
     </section>
   );
-}
+};

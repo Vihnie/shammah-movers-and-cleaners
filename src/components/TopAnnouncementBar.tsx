@@ -1,63 +1,52 @@
 import React from 'react';
-import { Phone, MessageCircle, ShieldCheck } from 'lucide-react';
+import { Phone, ShieldCheck, Clock, ShieldAlert, Sparkles } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
-export function TopAnnouncementBar() {
-  const { settings } = useApp();
-
-  if (!settings.announcement_active) return null;
+export const TopAnnouncementBar: React.FC = () => {
+  const { setCurrentView, dbConnected } = useApp();
 
   return (
-    <div className="bg-gradient-to-r from-blue-950 via-slate-900 to-blue-950 text-blue-100 text-xs py-1.5 px-4 border-b border-blue-900/40">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="flex h-2 w-2 relative">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+    <div className="bg-slate-900 text-slate-200 text-xs py-2 px-4 border-b border-slate-800">
+      <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="flex items-center flex-wrap gap-4 justify-center sm:justify-start">
+          <span className="flex items-center gap-1.5 font-medium text-amber-400">
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+            £100,000 Goods in Transit Insured
           </span>
-          <span className="font-semibold text-white tracking-wide">
-            {settings.announcement_text}
+          <span className="hidden md:inline-block text-slate-600">•</span>
+          <span className="flex items-center gap-1.5 text-slate-300">
+            <Clock className="w-3.5 h-3.5 text-emerald-400" />
+            Mon-Sun: 7:00 AM – 8:00 PM Dispatch
           </span>
-          <span className="hidden md:inline text-blue-300/60">•</span>
-          <span className="hidden md:flex items-center gap-1 text-blue-200">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
-            Vetted Crew & Up to 100% Care Guarantee
+          <span className="hidden lg:inline-block text-slate-600">•</span>
+          <span className="hidden lg:flex items-center gap-1.5 text-slate-300">
+            <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+            Autumn Booking Offer: Free Mattress Covers Included
           </span>
         </div>
 
-        <div className="flex items-center gap-3 text-xs font-semibold ml-auto">
+        <div className="flex items-center gap-4">
           <a
-            href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`}
-            className="flex items-center gap-1 text-blue-200 hover:text-white transition-colors"
-            title="Call Primary Line"
+            href="tel:+442079460912"
+            className="flex items-center gap-1.5 font-semibold text-white hover:text-amber-400 transition-colors"
           >
-            <Phone className="w-3 h-3 text-purple-300" />
-            <span className="hidden sm:inline">Call:</span> {settings.phone}
+            <Phone className="w-3.5 h-3.5 text-amber-400" />
+            <span>020 7946 0912</span>
           </a>
-          {settings.phone2 && (
-            <>
-              <span className="text-blue-700">/</span>
-              <a
-                href={`tel:${settings.phone2.replace(/[^0-9+]/g, '')}`}
-                className="text-blue-200 hover:text-white transition-colors"
-                title="Call Alternative Line"
-              >
-                {settings.phone2}
-              </a>
-            </>
-          )}
-          <span className="text-blue-700">|</span>
-          <a
-            href={`https://wa.me/${settings.whatsapp}?text=Hello%20Shammah%20Movers%2C%20I%20would%20like%20to%20inquire%20about%20your%20services`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors"
+          <button
+            onClick={() => setCurrentView('tracking')}
+            className="text-slate-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer"
           >
-            <MessageCircle className="w-3 h-3" />
-            <span>WhatsApp</span>
-          </a>
+            Track My Move
+          </button>
+          <button
+            onClick={() => setCurrentView('admin')}
+            className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-0.5 rounded text-[11px] font-medium border border-slate-700 hover:border-slate-600 transition-all cursor-pointer"
+          >
+            Dispatcher Portal
+          </button>
         </div>
       </div>
     </div>
   );
-}
+};

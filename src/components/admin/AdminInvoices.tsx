@@ -24,7 +24,7 @@ export function AdminInvoices() {
   const filteredInvoices = invoices.filter((inv) =>
     inv.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    inv.status.toLowerCase().includes(searchQuery.toLowerCase())
+    (inv.status || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleMarkPaid = (invoice: Invoice) => {
@@ -101,7 +101,7 @@ export function AdminInvoices() {
                   </td>
 
                   <td className="p-4 text-slate-600">
-                    {inv.issue_date}
+                    {inv.issue_date || inv.created_at?.split('T')[0] || 'Today'}
                   </td>
 
                   <td className="p-4 text-slate-600">
@@ -113,7 +113,7 @@ export function AdminInvoices() {
                   </td>
 
                   <td className="p-4 font-bold text-rose-700">
-                    Ksh. {inv.balance_due.toLocaleString('en-KE')}
+                    Ksh. {(inv.balance_due ?? inv.balance ?? 0).toLocaleString('en-KE')}
                   </td>
 
                   <td className="p-4">
@@ -121,7 +121,7 @@ export function AdminInvoices() {
                       className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-extrabold ${
                         inv.status === 'PAID'
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                          : inv.status === 'PARTIALLY_PAID'
+                          : (inv.status === 'PARTIALLY_PAID' || inv.status === 'PARTIAL')
                           ? 'bg-blue-50 text-blue-800 border border-blue-200'
                           : 'bg-rose-50 text-rose-800 border border-rose-200'
                       }`}
@@ -187,7 +187,7 @@ export function AdminInvoices() {
                 <span className="text-xl font-black text-blue-900 block">TAX INVOICE</span>
                 <span className="text-xs font-bold text-slate-700">{selectedInvoice.invoice_number}</span>
                 <span className="text-[11px] text-slate-400 block mt-0.5">
-                  Issued: {selectedInvoice.issue_date}
+                  Issued: {selectedInvoice.issue_date || selectedInvoice.created_at?.split('T')[0] || 'Today'}
                 </span>
                 <span className="text-[11px] text-slate-400 block">
                   Due: {selectedInvoice.due_date}
@@ -217,9 +217,9 @@ export function AdminInvoices() {
                   {selectedInvoice.items.map((item, idx) => (
                     <tr key={idx}>
                       <td className="p-3 font-medium text-slate-800">{item.description}</td>
-                      <td className="p-3 text-center text-slate-600">{item.quantity}</td>
-                      <td className="p-3 text-right text-slate-600">{item.unit_price.toLocaleString('en-KE')}</td>
-                      <td className="p-3 text-right font-bold text-slate-900">{item.total.toLocaleString('en-KE')}</td>
+                      <td className="p-3 text-center text-slate-600">{item.quantity || 1}</td>
+                      <td className="p-3 text-right text-slate-600">{(item.unit_price ?? item.amount).toLocaleString('en-KE')}</td>
+                      <td className="p-3 text-right font-bold text-slate-900">{(item.total ?? item.amount).toLocaleString('en-KE')}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -235,11 +235,11 @@ export function AdminInvoices() {
                 </div>
                 <div className="flex justify-between text-slate-600">
                   <span>Paid to Date:</span>
-                  <span className="font-semibold text-emerald-700">Ksh. {selectedInvoice.paid_amount.toLocaleString('en-KE')}</span>
+                  <span className="font-semibold text-emerald-700">Ksh. {(selectedInvoice.paid_amount ?? selectedInvoice.amount_paid ?? 0).toLocaleString('en-KE')}</span>
                 </div>
                 <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-200">
                   <span>Balance Due:</span>
-                  <span className="text-rose-700">Ksh. {selectedInvoice.balance_due.toLocaleString('en-KE')}</span>
+                  <span className="text-rose-700">Ksh. {(selectedInvoice.balance_due ?? selectedInvoice.balance ?? 0).toLocaleString('en-KE')}</span>
                 </div>
               </div>
             </div>

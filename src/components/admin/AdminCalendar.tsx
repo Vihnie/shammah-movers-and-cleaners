@@ -58,7 +58,8 @@ export function AdminCalendar() {
 
   const filteredBookings = bookings.filter((b) => {
     if (filterType === 'ALL') return true;
-    return b.service_type.toLowerCase().includes(filterType.toLowerCase());
+    const st = b.service_type || b.serviceType || '';
+    return st.toLowerCase().includes(filterType.toLowerCase());
   });
 
   return (
@@ -146,7 +147,7 @@ export function AdminCalendar() {
             }
 
             const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-            const dayBookings = filteredBookings.filter((b) => b.move_date === formattedDate);
+            const dayBookings = filteredBookings.filter((b) => (b.move_date || b.moveDate) === formattedDate);
             const isToday =
               new Date().toISOString().split('T')[0] === formattedDate;
 
@@ -180,10 +181,10 @@ export function AdminCalendar() {
                       key={b.id}
                       onClick={() => setSelectedBooking(b)}
                       className={`w-full text-left p-1 rounded border text-[10px] leading-tight font-bold truncate block transition-transform hover:scale-102 ${getServiceColor(
-                        b.service_type
+                        b.service_type || b.serviceType || 'moving'
                       )}`}
                     >
-                      {b.customer_name} • {b.preferred_time}
+                      {b.customer_name || b.customerName} • {b.preferred_time || b.timeSlot || 'Morning'}
                     </button>
                   ))}
                 </div>
@@ -206,7 +207,7 @@ export function AdminCalendar() {
 
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs font-bold text-blue-900 bg-blue-50 px-2.5 py-1 rounded-full">
-                {selectedBooking.booking_number}
+                {selectedBooking.booking_number || selectedBooking.id}
               </span>
               <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
                 {selectedBooking.status}
@@ -214,10 +215,10 @@ export function AdminCalendar() {
             </div>
 
             <h3 className="text-xl font-extrabold text-slate-900">
-              {selectedBooking.customer_name}
+              {selectedBooking.customer_name || selectedBooking.customerName}
             </h3>
             <p className="text-xs text-slate-500 mb-6">
-              {selectedBooking.service_type}
+              {selectedBooking.service_type || selectedBooking.serviceType}
             </p>
 
             <div className="space-y-3 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -226,7 +227,7 @@ export function AdminCalendar() {
                 <div>
                   <span className="text-slate-400 font-bold block text-[10px]">ROUTE</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedBooking.pickup_address} → {selectedBooking.dropoff_address}
+                    {selectedBooking.pickup_address || selectedBooking.pickupAddress} → {selectedBooking.dropoff_address || selectedBooking.dropoffAddress}
                   </span>
                 </div>
               </div>
@@ -236,7 +237,7 @@ export function AdminCalendar() {
                 <div>
                   <span className="text-slate-400 font-bold block text-[10px]">SCHEDULE</span>
                   <span className="font-semibold text-slate-800">
-                    {selectedBooking.move_date} at {selectedBooking.preferred_time}
+                    {selectedBooking.move_date || selectedBooking.moveDate} at {selectedBooking.preferred_time || selectedBooking.timeSlot || 'Morning'}
                   </span>
                 </div>
               </div>
@@ -244,11 +245,11 @@ export function AdminCalendar() {
               <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200/60">
                 <div>
                   <span className="text-slate-400 font-bold block text-[10px]">CREW TEAM</span>
-                  <span className="font-bold text-slate-800">{selectedBooking.team_assigned || 'Unassigned'}</span>
+                  <span className="font-bold text-slate-800">{selectedBooking.team_assigned || selectedBooking.assignedCrew?.leadName || 'Unassigned'}</span>
                 </div>
                 <div>
                   <span className="text-slate-400 font-bold block text-[10px]">VEHICLE</span>
-                  <span className="font-bold text-slate-800">{selectedBooking.vehicle_assigned || 'Unassigned'}</span>
+                  <span className="font-bold text-slate-800">{selectedBooking.vehicle_assigned || selectedBooking.assignedCrew?.truckNumber || 'Unassigned'}</span>
                 </div>
               </div>
             </div>
@@ -257,12 +258,12 @@ export function AdminCalendar() {
               <div>
                 <span className="text-[11px] text-slate-500 block">Total Amount</span>
                 <span className="text-lg font-black text-blue-950">
-                  Ksh. {selectedBooking.total_amount.toLocaleString('en-KE')}
+                  Ksh. {(selectedBooking.total_amount || selectedBooking.total_price || selectedBooking.pricing?.totalPrice || 0).toLocaleString('en-KE')}
                 </span>
               </div>
 
               <a
-                href={`https://wa.me/${selectedBooking.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(selectedBooking.customer_name)}%2C%20confirming%20our%20arrival%20time%20for%20your%20move%20on%20${selectedBooking.move_date}.`}
+                href={`https://wa.me/${(selectedBooking.phone || selectedBooking.customerPhone || selectedBooking.customer_phone || '').replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(selectedBooking.customer_name || selectedBooking.customerName)}%2C%20confirming%20our%20arrival%20time%20for%20your%20move%20on%20${selectedBooking.move_date || selectedBooking.moveDate}.`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition-colors"

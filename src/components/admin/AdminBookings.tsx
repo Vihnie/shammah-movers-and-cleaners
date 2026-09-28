@@ -25,11 +25,15 @@ export function AdminBookings() {
 
   const filteredBookings = bookings.filter((b) => {
     const matchesStatus = statusFilter === 'ALL' || b.status === statusFilter;
+    const name = b.customer_name || b.customerName || '';
+    const num = b.booking_number || b.id || '';
+    const ph = b.phone || b.customerPhone || '';
+    const addr = b.pickup_address || b.pickupAddress || '';
     const matchesSearch =
-      b.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.booking_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.phone.includes(searchQuery) ||
-      b.pickup_address.toLowerCase().includes(searchQuery.toLowerCase());
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      num.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      ph.includes(searchQuery) ||
+      addr.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -110,17 +114,17 @@ export function AdminBookings() {
               {filteredBookings.map((booking) => (
                 <tr key={booking.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="p-4 font-black text-blue-900">
-                    <div>{booking.booking_number}</div>
+                    <div>{booking.booking_number || booking.id}</div>
                     <span className="text-[10px] text-slate-400 font-normal">
-                      Ksh. {booking.total_amount.toLocaleString('en-KE')}
+                      Ksh. {(booking.total_amount ?? booking.total_price ?? booking.pricing?.totalPrice ?? 0).toLocaleString('en-KE')}
                     </span>
                   </td>
 
                   <td className="p-4">
-                    <div className="font-extrabold text-slate-900">{booking.customer_name}</div>
-                    <span className="text-[11px] text-slate-500 block">{booking.phone}</span>
+                    <div className="font-extrabold text-slate-900">{booking.customer_name || booking.customerName || 'Customer'}</div>
+                    <span className="text-[11px] text-slate-500 block">{booking.phone || booking.customerPhone || ''}</span>
                     <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded">
-                      {booking.service_type}
+                      {booking.service_type || booking.serviceType || 'Moving'}
                     </span>
                   </td>
 
@@ -198,7 +202,7 @@ export function AdminBookings() {
 
                   <td className="p-4 text-right space-x-1.5">
                     <a
-                      href={`https://wa.me/${booking.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(booking.customer_name)}%2C%20this%20is%20Shammah%20Movers%20regarding%20your%20scheduled%20move%20${booking.booking_number}%20on%20${booking.move_date}.`}
+                      href={`https://wa.me/${(booking.phone || booking.customerPhone || '').replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(booking.customer_name || booking.customerName || 'Customer')}%2C%20this%20is%20Shammah%20Movers%20regarding%20your%20scheduled%20move%20${booking.booking_number || booking.id}%20on%20${booking.move_date || booking.moveDate || ''}.`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700"

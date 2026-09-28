@@ -128,11 +128,11 @@ export function AdminCustomers() {
                   </td>
 
                   <td className="p-4 font-bold text-slate-900">
-                    {cust.total_bookings} move{cust.total_bookings !== 1 ? 's' : ''}
+                    {(cust.total_bookings ?? cust.previous_bookings ?? 0)} move{(cust.total_bookings ?? cust.previous_bookings ?? 0) !== 1 ? 's' : ''}
                   </td>
 
                   <td className="p-4 font-black text-blue-900">
-                    Ksh. {cust.total_spent.toLocaleString('en-KE')}
+                    Ksh. {(cust.total_spent ?? 0).toLocaleString('en-KE')}
                   </td>
 
                   <td className="p-4 text-right space-x-1.5">

@@ -1,6 +1,6 @@
 {
-  "name": "Shammah Movers and Cleaners",
-  "description": "Progressive Web App for Shammah Movers and Cleaners featuring an integrated price calculator based on square footage and distance, package tiers, and service booking.",
+  "name": "SwiftMove Relocations & Storage",
+  "description": "Professional residential and commercial moving, packing, and secure storage platform with instant price calculation, live booking tracking, and dispatcher fleet management.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

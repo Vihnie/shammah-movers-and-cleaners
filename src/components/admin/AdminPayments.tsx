@@ -20,8 +20,8 @@ export function AdminPayments() {
 
   const filteredPayments = payments.filter((p) =>
     p.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.method.toLowerCase().includes(searchQuery.toLowerCase())
+    (p.reference || p.transaction_reference || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (p.method || p.payment_method || '').toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleRecordPayment = (e: React.FormEvent) => {

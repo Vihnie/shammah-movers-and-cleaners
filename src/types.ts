@@ -1,5 +1,17 @@
 export type ServiceType = 'moving' | 'cleaning' | 'combo';
 
+export interface ServiceDetail {
+  id: string;
+  title: string;
+  tagline: string;
+  description: string;
+  basePrice: number;
+  priceUnit: string;
+  icon: string;
+  features: string[];
+  popularFor: string;
+}
+
 export type PackageTierId = 'essential' | 'pro' | 'white_glove';
 
 export interface PackageTier {
@@ -63,40 +75,60 @@ export interface CalculatedPricing {
 
 export interface BookingDetails {
   id: string;
-  createdAt: string;
-  serviceType: ServiceType;
-  tier: PackageTierId;
-  tierName: string;
-  pricing: CalculatedPricing;
-  calculatorState: CalculatorState;
+  createdAt?: string;
+  serviceType?: ServiceType;
+  tier?: PackageTierId | string;
+  tierName?: string;
+  tier_name?: string;
+  pricing?: CalculatedPricing;
+  calculatorState?: CalculatorState;
   
   // Schedule & Location
-  moveDate: string;
-  timeSlot: 'morning' | 'afternoon' | 'all_day';
-  pickupAddress: string;
-  dropoffAddress: string;
-  pickupAccess: string;
-  dropoffAccess: string;
+  moveDate?: string;
+  timeSlot?: 'morning' | 'afternoon' | 'all_day' | string;
+  pickupAddress?: string;
+  dropoffAddress?: string;
+  pickupAccess?: string;
+  dropoffAccess?: string;
 
   // Inventory / Specifics
-  selectedInventory: string[];
-  specialInstructions: string;
+  selectedInventory?: string[];
+  specialInstructions?: string;
 
   // Customer info
-  customerName: string;
-  customerPhone: string;
-  customerEmail: string;
-  contactViaWhatsApp: boolean;
-  paymentMethod: 'card_deposit' | 'cash_on_delivery' | 'bank_transfer' | 'mobile_money';
+  customerName?: string;
+  customerPhone?: string;
+  customerEmail?: string;
+  contactViaWhatsApp?: boolean;
+  paymentMethod?: 'card_deposit' | 'cash_on_delivery' | 'bank_transfer' | 'mobile_money' | string;
+  payment_method?: string;
 
   // Status for Tracker and CRM
-  status: 'confirmed' | 'crew_assigned' | 'in_transit' | 'completed' | 'cancelled';
+  status: 'confirmed' | 'crew_assigned' | 'in_transit' | 'completed' | 'cancelled' | 'CONFIRMED' | 'COMPLETED' | 'Confirmed' | 'Completed' | string;
   assignedCrew?: {
     leadName: string;
     leadPhone: string;
     truckNumber: string;
     crewCount: number;
   };
+
+  // Aliases for admin calendar & dashboard
+  move_date?: string;
+  service_type?: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+  pickup_address?: string;
+  dropoff_address?: string;
+  time_slot?: string;
+  total_price?: number;
+  total_amount?: number;
+  booking_number?: string;
+  team_assigned?: string;
+  vehicle_assigned?: string;
+  preferred_time?: string;
+  phone?: string;
+  details_json?: string;
 }
 
 export interface ChecklistItem {
@@ -140,6 +172,7 @@ export interface Lead {
   attachments?: string[];
   status: LeadStatus;
   assigned_staff?: string;
+  assigned_to?: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -151,44 +184,57 @@ export interface Customer {
   phone: string;
   email: string;
   address: string;
-  previous_bookings: number;
-  previous_quotes: number;
-  total_spent: number;
-  last_service: string;
-  notes: string;
+  previous_bookings?: number;
+  previous_quotes?: number;
+  total_bookings?: number;
+  total_spent?: number;
+  last_service?: string;
+  notes?: string;
   created_at: string;
 }
 
-export type StaffRole = 'Driver' | 'Mover' | 'Team Leader' | 'Cleaner' | 'Supervisor' | 'Administrator';
+export type StaffRole = 'Driver' | 'Mover' | 'Team Leader' | 'Cleaner' | 'Supervisor' | 'Administrator' | 'MOVER';
 
 export interface Staff {
   id: string;
   name: string;
   phone: string;
   role: StaffRole;
-  team: string;
+  team?: string;
   status: 'AVAILABLE' | 'ON_JOB' | 'OFF_DUTY';
+  national_id?: string;
+  rating?: number;
+  active?: boolean;
   notes?: string;
 }
 
 export interface Team {
   id: string;
   name: string;
-  type: 'moving' | 'cleaning' | 'combo';
-  lead_name: string;
-  members_count: number;
+  type?: 'moving' | 'cleaning' | 'combo';
+  lead_name?: string;
+  members_count?: number;
   assigned_truck?: string;
+  leader?: string;
+  members?: string[];
 }
 
-export type VehicleStatus = 'AVAILABLE' | 'ON JOB' | 'MAINTENANCE' | 'INACTIVE';
+export type VehicleStatus = 'AVAILABLE' | 'ON JOB' | 'ON_JOB' | 'MAINTENANCE' | 'INACTIVE';
 
 export interface Vehicle {
   id: string;
-  registration: string;
-  type: string;
-  capacity: string;
+  registration?: string;
+  plate_number?: string;
+  model?: string;
+  type?: string;
+  capacity?: string;
+  capacityCuFt?: number;
   status: VehicleStatus;
   current_assignment?: string;
+  mileage?: number;
+  insurance_expiry?: string;
+  service_due?: string;
+  active?: boolean;
   notes?: string;
 }
 
@@ -213,9 +259,10 @@ export type Booking = BookingDetails;
 
 export interface QuoteItem {
   description: string;
-  amount: number;
+  amount?: number;
   quantity?: number;
   unit_price?: number;
+  total?: number;
 }
 
 export interface InvoiceItem {
@@ -223,6 +270,7 @@ export interface InvoiceItem {
   amount: number;
   quantity?: number;
   unit_price?: number;
+  total?: number;
 }
 
 export interface Quote {
@@ -230,19 +278,24 @@ export interface Quote {
   quote_number: string;
   lead_id?: string;
   customer_name: string;
-  customer_phone: string;
-  customer_email: string;
-  service_type: string;
-  moving_from: string;
-  moving_to: string;
+  customer_phone?: string;
+  phone?: string;
+  customer_email?: string;
+  email?: string;
+  service_type?: string;
+  moving_from?: string;
+  moving_to?: string;
+  move_date?: string;
   items: QuoteItem[];
   distance_surcharge?: number;
   discount?: number;
-  total_amount: number;
-  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'EXPIRED';
+  subtotal?: number;
+  total?: number;
+  total_amount?: number;
+  status: 'DRAFT' | 'SENT' | 'ACCEPTED' | 'EXPIRED' | 'REJECTED';
   notes?: string;
   terms?: string;
-  valid_until: string;
+  valid_until?: string;
   created_at: string;
 }
 
@@ -262,8 +315,9 @@ export interface Invoice {
   paid_amount?: number;
   balance?: number;
   balance_due?: number;
-  status?: 'DRAFT' | 'SENT' | 'PAID' | 'PARTIAL' | 'OVERDUE' | 'CANCELLED';
+  status?: 'DRAFT' | 'SENT' | 'PAID' | 'PARTIAL' | 'PARTIALLY_PAID' | 'OVERDUE' | 'CANCELLED';
   payment_status?: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' | 'OVERDUE';
+  issue_date?: string;
   due_date: string;
   created_at: string;
 }

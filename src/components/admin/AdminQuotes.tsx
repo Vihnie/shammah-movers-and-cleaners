@@ -60,7 +60,7 @@ export function AdminQuotes() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const subtotal = items.reduce((acc, item) => acc + item.total, 0);
+  const subtotal = items.reduce((acc, item) => acc + (item.total || 0), 0);
   const total = Math.max(0, subtotal - discount);
 
   const handleCreateQuote = (e: React.FormEvent) => {
@@ -197,7 +197,7 @@ export function AdminQuotes() {
                       </button>
 
                       <a
-                        href={`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(quote.customer_name)}%2C%20here%20is%20your%20official%20quotation%20from%20Shammah%20Movers%3A%0A%0AQuote%20Ref%3A%20${quote.quote_number}%0ARoute%3A%20${encodeURIComponent(quote.moving_from)}%20to%20${encodeURIComponent(quote.moving_to)}%0ATarget%20Date%3A%20${quote.move_date}%0ATotal%20Amount%3A%20Ksh%20${total.toLocaleString('en-KE')}%0A%0APlease%20reply%20here%20to%20confirm%20your%20booking.`}
+                        href={`https://wa.me/${(quote.phone || '').replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(quote.customer_name || 'Customer')}%2C%20here%20is%20your%20official%20quotation%20from%20Shammah%20Movers%3A%0A%0AQuote%20Ref%3A%20${quote.quote_number}%0ARoute%3A%20${encodeURIComponent(quote.moving_from || 'Pickup')}%20to%20${encodeURIComponent(quote.moving_to || 'Destination')}%0ATarget%20Date%3A%20${quote.move_date || ''}%0ATotal%20Amount%3A%20Ksh%20${(quote.total_amount ?? quote.total ?? 0).toLocaleString('en-KE')}%0A%0APlease%20reply%20here%20to%20confirm%20your%20booking.`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex p-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-700 cursor-pointer"
